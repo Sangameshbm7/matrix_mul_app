@@ -1,0 +1,47 @@
+<!-- app/views/matrices/index.html.erb -->
+
+<h1>Matrix Multiplication</h1>
+
+<div id="matrixInput">
+  <div class="matrix-input">
+    <%= label_tag "matrix1Rows", "Matrix 1 Rows:" %>
+    <%= text_field_tag "matrix1Rows", 1, class: "numeric" %>
+    <%= label_tag "matrix1Columns", "Columns:" %>
+    <%= text_field_tag "matrix1Columns", 1, class: "numeric" %>
+    <div class="error-message" id="matrix1Rows-error"></div>
+    <div class="error-message" id="matrix1Columns-error"></div>
+  </div>
+  <div class="matrix-input">
+    <%= label_tag "matrix2Rows", "Matrix 2 Rows:" %>
+    <%= text_field_tag "matrix2Rows", 1, class: "numeric" %>
+    <%= label_tag "matrix2Columns", "Columns:" %>
+    <%= text_field_tag "matrix2Columns", 1, class: "numeric" %>
+    <div class="error-message" id="matrix2Rows-error"></div>
+    <div class="error-message" id="matrix2Columns-error"></div>
+  </div>
+  <%= button_to "Generate Matrices", { action: :generate_matrices }, method: :get, remote: true %>
+</div>
+
+<div id="matrixInputs"></div>
+
+<style type="text/css">
+  .error-message {
+    color: red;
+    font-size: 12px;
+  }
+</style>
+
+<script type="text/javascript">
+$(document).on('input', '.numeric', function() {
+  var input = $(this);
+  var value = input.val();
+  var id = input.attr('id');
+  var errorMessage = '';
+  
+  if (value && !(/^\d+$/.test(value))) {
+    errorMessage = 'Please enter numbers only';
+  }
+  
+  $('#' + id + '-error').text(errorMessage);
+});
+</script>
