@@ -1,5 +1,3 @@
-<!-- app/views/matrices/index.html.erb -->
-
 <h1>Matrix Multiplication</h1>
 
 <div id="matrixInput">
@@ -27,14 +25,17 @@
   <span class="multiplication-mark">&times;</span>
   <span id="matrixInputs2"></span>
   <span class="equal-sign" style="display:none;">=</span>
-  <button class="delete-button" style="display:none;">Calculate</button>
+  <button class="delete-button" onclick="matrix_multiplication()">Calculate</button>
 </div>
-
 
 <div id="errorMessage" class="error-message" style="display:none;">Enter values in all the fields</div>
 
+<div id="resultMatrix" style="display:none;">
+  <h2>Result Matrix</h2>
+  <div id="resultMatrixContent"></div>
+</div>
+
 <style type="text/css">
-  <style type="text/css">
   .error-message {
     color: red;
     font-size: 12px;
@@ -57,64 +58,112 @@
   }
 </style>
 
-</style>
-
 <script type="text/javascript">
-$(document).ready(function() {
-  checkEmptyFields();
-});
+  $(document).ready(function() {
+    checkEmptyFields();
+  });
 
-$(document).on('input', '.numeric', function() {
-  var input = $(this);
-  var value = input.val();
-  var id = input.attr('id');
-  var errorMessage = '';
-  
-  if (value && !(/^\d+$/.test(value))) {
-    errorMessage = 'Please enter numbers only';
-  }
-  
-  $('#' + id + '-error').text(errorMessage);
-
-  // Check if all fields are filled
-  checkEmptyFields();
-});
-
-function checkEmptyFields() {
-  var matrix1Rows = $('#matrix1Rows').val();
-  var matrix1Columns = $('#matrix1Columns').val();
-  var matrix2Rows = $('#matrix2Rows').val();
-  var matrix2Columns = $('#matrix2Columns').val();
-  
-  if (matrix1Rows && matrix1Columns && matrix2Rows && matrix2Columns) {
-    $('#errorMessage').hide();
-    // Dynamically generate input boxes for matrix1 and matrix2
-    generateMatrixInput('#matrix1Rows', '#matrix1Columns', 'matrixInputs1');
-    generateMatrixInput('#matrix2Rows', '#matrix2Columns', 'matrixInputs2');
-    $('.multiplication-mark').show(); // Show the multiplication mark
-  } else {
-    $('#errorMessage').show();
-    $('#matrixInputs1').empty();
-    $('#matrixInputs2').empty();
-    $('.multiplication-mark').hide(); // Hide the multiplication mark
-  }
-}
-
-function generateMatrixInput(rowsSelector, columnsSelector, containerId) {
-  var rows = parseInt($(rowsSelector).val());
-  var columns = parseInt($(columnsSelector).val());
-  var container = $('#' + containerId);
-  container.empty(); // Clear previous input boxes
-  
-  for (var i = 0; i < rows; i++) {
-    var row = $('<div class="matrix-row"></div>');
-    for (var j = 0; j < columns; j++) {
-      row.append('<input type="text" class="matrix-input-box">');
+  $(document).on('input', '.numeric', function() {
+    var input = $(this);
+    var value = input.val();
+    var id = input.attr('id');
+    var errorMessage = '';
+    
+    if (value && !(/^\d+$/.test(value))) {
+      errorMessage = 'Please enter numbers only';
     }
-    container.append(row);
+    
+    $('#' + id + '-error').text(errorMessage);
+    checkEmptyFields();
+  });
+
+  function checkEmptyFields() {
+    var matrix1Rows = $('#matrix1Rows').val();
+    var matrix1Columns = $('#matrix1Columns').val();
+    var matrix2Rows = $('#matrix2Rows').val();
+    var matrix2Columns = $('#matrix2Columns').val();
+    
+    if (matrix1Rows && matrix1Columns && matrix2Rows && matrix2Columns) {
+      $('#errorMessage').hide();
+      // Dynamically generate input boxes for matrix1 and matrix2
+      generateMatrixInput('#matrix1Rows', '#matrix1Columns', 'matrixInputs1');
+      generateMatrixInput('#matrix2Rows', '#matrix2Columns', 'matrixInputs2');
+      $('.multiplication-mark').show(); // Show the multiplication mark
+    } else {
+      $('#errorMessage').show();
+      $('#matrixInputs1').empty();
+      $('#matrixInputs2').empty();
+      $('.multiplication-mark').hide(); // Hide the multiplication mark
+    }
   }
-}
 
+  function generateMatrixInput(rowsSelector, columnsSelector, containerId) {
+    var rows = parseInt($(rowsSelector).val());
+    var columns = parseInt($(columnsSelector).val());
+    var container = $('#' + containerId);
+    container.empty(); // Clear previous input boxes
+    
+    for (var i = 0; i < rows; i++) {
+      var row = $('<div class="matrix-row"></div>');
+      for (var j = 0; j < columns; j++) {
+        row.append('<input type="text" class="matrix-input-box">');
+      }
+      container.append(row);
+    }
+  }
 
+  function matrix_multiplication(){
+    var matrix1 = getMatrixData('#matrixInputs1');
+    var matrix2 = getMatrixData('#matrixInputs2');
+    
+    // Fetch CSRF token from meta tag
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    
+    $.ajax({
+      type: 'POST',
+      url: '/matrices/matrix_multiplication',
+      data: { matrix1: matrix1, matrix2: matrix2 },
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('X-CSRF-Token', csrfToken); // Set CSRF token in request headers
+      },
+      success: function(response) {
+        displayResultMatrix(response.result);
+      },
+      error: function(xhr, status, error) {
+        console.error(error);
+      }
+    });
+  }
+
+  function getMatrixData(containerId) {
+    var matrixData = [];
+    $(containerId + ' .matrix-row').each(function() {
+      var row = [];
+      $(this).find('.matrix-input-box').each(function() {
+        row.push(parseInt($(this).val()) || 0); // Convert to integer or default to 0
+      });
+      matrixData.push(row);
+    });
+    return matrixData;
+  }
+
+  function displayResultMatrix(result) {
+    var resultMatrixContent = $('#resultMatrixContent');
+    resultMatrixContent.empty(); // Clear previous result matrix content
+
+    // Generate HTML for result matrix
+    var resultHtml = '<table>';
+    result.forEach(function(row) {
+      resultHtml += '<tr>';
+      row.forEach(function(cell) {
+        resultHtml += '<td>' + cell + '</td>';
+      });
+      resultHtml += '</tr>';
+    });
+    resultHtml += '</table>';
+
+    // Display result matrix
+    resultMatrixContent.html(resultHtml);
+    $('#resultMatrix').show(); // Show the result matrix section
+  }
 </script>
-
