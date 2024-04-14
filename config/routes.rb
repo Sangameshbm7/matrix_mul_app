@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   get 'matrices/multiply'
-  get 'matrices/generate_matrices', to: 'matrices#generate_matrices', as: 'generate_matrices'
+  post 'matrices/matrix_multiplication', to: 'matrices#matrix_multiplication'
   root to: "home#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
