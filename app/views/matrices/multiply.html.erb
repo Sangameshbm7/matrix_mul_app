@@ -5,33 +5,63 @@
 <div id="matrixInput">
   <div class="matrix-input">
     <%= label_tag "matrix1Rows", "Matrix 1 Rows:" %>
-    <%= text_field_tag "matrix1Rows", 1, class: "numeric" %>
+    <%= text_field_tag "matrix1Rows", nil, class: "numeric" %>
     <%= label_tag "matrix1Columns", "Columns:" %>
-    <%= text_field_tag "matrix1Columns", 1, class: "numeric" %>
+    <%= text_field_tag "matrix1Columns", nil, class: "numeric" %>
     <div class="error-message" id="matrix1Rows-error"></div>
     <div class="error-message" id="matrix1Columns-error"></div>
   </div>
   <div class="matrix-input">
     <%= label_tag "matrix2Rows", "Matrix 2 Rows:" %>
-    <%= text_field_tag "matrix2Rows", 1, class: "numeric" %>
+    <%= text_field_tag "matrix2Rows", nil, class: "numeric" %>
     <%= label_tag "matrix2Columns", "Columns:" %>
-    <%= text_field_tag "matrix2Columns", 1, class: "numeric" %>
+    <%= text_field_tag "matrix2Columns", nil, class: "numeric" %>
     <div class="error-message" id="matrix2Rows-error"></div>
     <div class="error-message" id="matrix2Columns-error"></div>
   </div>
-  <%= button_to "Generate Matrices", { action: :generate_matrices }, method: :get, remote: true %>
+</div>
+<br>
+
+<div class="matrix-input-container">
+  <span id="matrixInputs1"></span>
+  <span class="multiplication-mark">&times;</span>
+  <span id="matrixInputs2"></span>
 </div>
 
-<div id="matrixInputs"></div>
+
+<div id="errorMessage" class="error-message" style="display:none;">Enter values in all the fields</div>
 
 <style type="text/css">
+  <style type="text/css">
   .error-message {
     color: red;
     font-size: 12px;
   }
+  .matrix-row {
+    display: flex;
+    align-items: center;
+  }
+  .matrix-input-box {
+    width: 40px;
+    margin-right: 5px;
+  }
+  .multiplication-mark {
+    margin: 0 10px;
+    font-size: 20px;
+  }
+  .matrix-input-container {
+    display: inline-flex;
+    align-items: center;
+  }
+</style>
+
 </style>
 
 <script type="text/javascript">
+$(document).ready(function() {
+  checkEmptyFields();
+});
+
 $(document).on('input', '.numeric', function() {
   var input = $(this);
   var value = input.val();
@@ -43,5 +73,44 @@ $(document).on('input', '.numeric', function() {
   }
   
   $('#' + id + '-error').text(errorMessage);
+
+  // Check if all fields are filled
+  checkEmptyFields();
 });
+
+function checkEmptyFields() {
+  var matrix1Rows = $('#matrix1Rows').val();
+  var matrix1Columns = $('#matrix1Columns').val();
+  var matrix2Rows = $('#matrix2Rows').val();
+  var matrix2Columns = $('#matrix2Columns').val();
+  
+  if (matrix1Rows && matrix1Columns && matrix2Rows && matrix2Columns) {
+    $('#errorMessage').hide();
+    // Dynamically generate input boxes for matrix1 and matrix2
+    generateMatrixInput('#matrix1Rows', '#matrix1Columns', 'matrixInputs1');
+    generateMatrixInput('#matrix2Rows', '#matrix2Columns', 'matrixInputs2');
+    $('.multiplication-mark').show(); // Show the multiplication mark
+  } else {
+    $('#errorMessage').show();
+    $('#matrixInputs1').empty();
+    $('#matrixInputs2').empty();
+    $('.multiplication-mark').hide(); // Hide the multiplication mark
+  }
+}
+
+function generateMatrixInput(rowsSelector, columnsSelector, containerId) {
+  var rows = parseInt($(rowsSelector).val());
+  var columns = parseInt($(columnsSelector).val());
+  var container = $('#' + containerId);
+  container.empty(); // Clear previous input boxes
+  
+  for (var i = 0; i < rows; i++) {
+    var row = $('<div class="matrix-row"></div>');
+    for (var j = 0; j < columns; j++) {
+      row.append('<input type="text" class="matrix-input-box">');
+    }
+    container.append(row);
+  }
+}
 </script>
+
